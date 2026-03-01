@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Liki - Bienvenida</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  
+</head>
+<body>
+  <header class="header">
+    <div class="logo">Liki <span>Distribuciones</span></div>
+    <nav class="nav">
+      <a href="overview.html">Inicio</a>
+      <a href="cliente.html">Ir al catálogo</a>
+      <a href="admin.html">Admin</a>
+      <a href="#" id="logout">Cerrar sesión</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <h1 class="section-title">¡Bienvenido, <span id="userName">Usuario</span>!</h1>
+      <p>Descubre nuestra misión de impulsar el billar en México</p>
+    </div>
+  </section>
+
+  <!-- Featured products -->
+  <main class="container">
+    <section class="featured-section">
+      <h2 class="section-title center-title">Algunos de nuestros productos</h2>
+      <div id="featuredProducts" class="featured-grid grid-3"></div>
+    </section>
+    
+    <!-- existing content continues below -->
+
+    <!-- Misión, Visión y Valores -->
+    <section>
+      <h2 class="section-title center-title">Nuestra Empresa</h2>
+      
+      <div class="mission-section">
+        <div class="mission-card">
+          <h3>Misión</h3>
+          <p>Ser el distribuidor líder de productos de billar de calidad superior en México, brindando excelencia en servicio y acceso a equipos que potencien el desarrollo del deporte en el país.</p>
+        </div>
+        
+        <div class="mission-card">
+          <h3>Visión</h3>
+          <p>Impulsar el billar como deporte profesional en México, creando comunidades vibrantes alrededor del juego y siendo el referente en innovación y calidad de productos.</p>
+        </div>
+        
+        <div class="mission-card">
+          <h3>Valores</h3>
+          <p><strong>Excelencia:</strong> Calidad Premium • <strong>Integridad:</strong> Transparencia Total • <strong>Pasión:</strong> Amor por el Billar • <strong>Compromiso:</strong> Con Nuestros Clientes</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Formulario de Comentarios -->
+    <section class="form-section">
+      <h2>Envíanos tu comentario</h2>
+      <div id="successMessage" class="alert-success">
+        ✓ ¡Gracias por tu comentario! Lo hemos recibido correctamente.
+      </div>
+      <form id="commentForm">
+        <div class="form-group">
+          <label for="commentName">Nombre</label>
+          <input type="text" id="commentName" name="name" placeholder="Tu nombre completo" required/>
+        </div>
+        
+        <div class="form-group">
+          <label for="commentEmail">Correo electrónico</label>
+          <input type="email" id="commentEmail" name="email" placeholder="tu@correo.com" required/>
+        </div>
+        
+        <div class="form-group">
+          <label for="commentSubject">Asunto</label>
+          <input type="text" id="commentSubject" name="subject" placeholder="¿De qué trata tu comentario?" required/>
+        </div>
+        
+        <div class="form-group">
+          <label for="commentText">Comentario</label>
+          <textarea id="commentText" name="message" placeholder="Cuéntanos tu opinión, sugerencias o experiencia..." required></textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-gold btn-block">Enviar Comentario</button>
+      </form>
+    </section>
+
+    <!-- Navegación adicional -->
+    <section class="center-section">
+      <h2 class="section-title">¿Qué deseas hacer?</h2>
+      <div class="grid grid-2 mt-2rem">
+        <a href="cliente.html" class="btn btn-gold">Ir al catálogo</a>
+        <a href="index.html" class="btn btn-gold" onclick="Auth.logout(); return false;">Cerrar Sesión</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">© 2026 Liki Distribuciones - Impulsando el billar en México</footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    // Verificar que el usuario esté autenticado
+    window.addEventListener('DOMContentLoaded', ()=>{
+      Auth.requireRole('client');
+      
+      // Mostrar el nombre del usuario
+      const userName = localStorage.getItem('userName');
+      if(userName) {
+        document.getElementById('userName').textContent = userName;
+      }
+    });
+
+    // Cargar primeros 3 productos para la sección "Algunos de nuestros productos"
+    (async function loadFeatured(){
+      try{
+        const list = await API.getProducts();
+        const first = (list || []).slice(0,3);
+        const wrap = document.getElementById('featuredProducts');
+        if(!wrap) return;
+        wrap.innerHTML = first.map(p => `
+          <div class="product-card">
+            ${p.image_url ? `<img src="${p.image_url}" alt="${p.name}">` : `<div style="height:160px;background:#111"></div>`}
+            <div class="product-body">
+              <h3>${p.name}</h3>
+              <p>${p.description || ''}</p>
+              <p><strong>$${Number(p.price).toFixed(2)}</strong> · <span class='badge'>Stock: ${p.stock}</span></p>
+            </div>
+          </div>
+        `).join('');
+      }catch(err){
+        console.warn('Error cargando productos destacados', err);
+      }
+    })();
+
+    // Manejo del formulario de comentarios
+    document.getElementById('commentForm').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      
+      // Obtener los valores del formulario
+      const name = document.getElementById('commentName').value;
+      const email = document.getElementById('commentEmail').value;
+      const subject = document.getElementById('commentSubject').value;
+      const message = document.getElementById('commentText').value;
+      
+      // Simular envío (in console log para demostración)
+      console.log('Comentario enviado:', { name, email, subject, message });
+      
+      // Mostrar mensaje de éxito
+      const successMsg = document.getElementById('successMessage');
+      successMsg.classList.add('show');
+      
+      // Limpiar formulario
+      document.getElementById('commentForm').reset();
+      
+      // Ocultar mensaje después de 4 segundos
+      setTimeout(()=>{
+        successMsg.classList.remove('show');
+      }, 4000);
+    });
+  </script>
+</body>
+</html>

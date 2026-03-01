@@ -1,0 +1,92 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Liki Distribuciones – Inicio</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="header">
+    <div class="logo">Liki <span>Distribuciones</span></div>
+    <nav class="nav">
+      <a href="index.html">Inicio</a>
+      <a href="cliente.html">Comprar</a>
+      <a href="admin.html">Admin</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <h1 class="section-title">Productos de billar de alto desempeño</h1>
+      <p>Explora el catálogo. Inicia sesión para comprar (cliente) o administrar inventario (admin).</p>
+    </div>
+  </section>
+
+  <main class="container">
+    <div class="grid grid-2">
+      <section class="card">
+        <h2 class="section-title">Iniciar sesión</h2>
+        <form id="loginForm">
+          <label>Email</label>
+          <input id="loginEmail" class="input" type="email" placeholder="tu@correo.com" required/>
+          <label>Contraseña</label>
+          <input id="loginPass" class="input" type="password" placeholder="••••••••" required/>
+          <button class="btn btn-gold" type="submit">Entrar</button>
+          <div id="loginMsg" class="alert hidden"></div>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title">Catálogo (público)</h2>
+        <div id="catalogo" class="grid grid-3"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">© 2026 Liki Distribuciones</footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    // Cargar catálogo público al entrar
+    (async function(){
+      const list = await API.getProducts();
+      const wrap = document.getElementById('catalogo');
+      wrap.innerHTML = list.map(p => `
+        <div class='card'>
+          ${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" style="width:100%;height:160px;object-fit:cover;border-radius:10px;">` : ''}
+          <h3>${p.name}</h3>
+          <p>${p.description || ''}</p>
+          <p><strong>$${Number(p.price).toFixed(2)}</strong> · <span class='badge'>Stock: ${p.stock}</span></p>
+        </div>
+      `).join('');
+    })();
+
+    // Manejo de login
+    document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPass').value;
+      const msg = document.getElementById('loginMsg');
+      try{
+        const { token, user } = await Auth.login(email, password);
+        msg.classList.remove('hidden');
+        msg.textContent = `Bienvenido ${user.name}. Redirigiendo…`;
+        setTimeout(()=>{
+          if(user.role === 'admin') location.href = 'admin.html';
+           else location.href = 'overview.html';
+        }, 600);
+      }catch(err){
+        msg.classList.remove('hidden');
+        msg.textContent = err.message || 'Error al iniciar sesión';
+      }
+    });
+  </script>
+</body>
+</html>
